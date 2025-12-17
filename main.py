@@ -44,3 +44,6 @@ async def upload_files(files: list[UploadFile] = File(...)):
             shutil.copyfileobj(file.file, buffer)
         saved_files.append(file.filename)
     return JSONResponse(content={"uploaded_files": saved_files})
+
+if __name__ == '__main__':
+    uvicorn.run(app, host='0.0.0.0', port=5500)
