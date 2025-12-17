@@ -1,0 +1,179 @@
+<!DOCTYPE html><html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>My PDF Textbook Assistant</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #eef2f7;
+      margin: 0;
+      padding: 0;
+    }.container {
+  max-width: 900px;
+  margin: 40px auto;
+  background: #ffffff;
+  padding: 30px;
+  border-radius: 10px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+}
+
+h1 {
+  text-align: center;
+  color: #222;
+}
+
+p.subtitle {
+  text-align: center;
+  color: #555;
+  margin-bottom: 30px;
+}
+
+.upload-box {
+  border: 2px dashed #007bff;
+  padding: 20px;
+  text-align: center;
+  border-radius: 8px;
+  margin-bottom: 25px;
+}
+
+input[type="file"] {
+  margin-top: 10px;
+}
+
+.search-box {
+  display: flex;
+  gap: 10px;
+  margin-top: 20px;
+}
+
+input[type="text"] {
+  flex: 1;
+  padding: 12px;
+  font-size: 16px;
+  border-radius: 6px;
+  border: 1px solid #ccc;
+}
+
+button {
+  padding: 12px 20px;
+  font-size: 16px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  background-color: #007bff;
+  color: white;
+}
+
+button:hover {
+  background-color: #0056b3;
+}
+
+.result {
+  margin-top: 30px;
+  padding: 20px;
+  background: #f9fafb;
+  border-left: 5px solid #007bff;
+  display: none;
+}
+
+.result h3 {
+  margin-top: 0;
+}
+
+footer {
+  text-align: center;
+  margin-top: 40px;
+  color: #888;
+  font-size: 14px;
+}
+
+  </style>
+</head>
+<body>  <div class="container">
+    <h1>📄 Personal PDF Assistant</h1>
+    <p class="subtitle">Upload your PDF and find where the answer exists</p><div class="upload-box">
+  <strong>Upload your PDF textbook(s)</strong><br />
+  <input type="file" id="pdfInput" accept="application/pdf" multiple onchange="handleFiles()" />
+  <p style="color:#666; font-size:14px;">(You can upload multiple PDFs)</p>
+  <ul id="pdfList" style="list-style:none; padding-left:0; margin-top:15px;"></ul>
+</div>
+
+<div class="search-box">
+  <input type="text" id="question" placeholder="Ask a question from the PDF..." />
+  <button onclick="findLocation()">Find Location</button>
+</div>
+
+<div class="result" id="resultBox">
+  <h3>📍 Answer Found At</h3>
+  <p><strong>Chapter:</strong> Chapter 3 – Semiconductor Physics</p>
+  <p><strong>Page:</strong> Page 78</p>
+  <p><strong>Paragraph:</strong> 2nd paragraph under the heading</p>
+</div>
+
+<footer>
+  © 2025 Personal PDF Assistant
+</footer>
+
+  </div>  <script>
+    let uploadedFiles = [];
+
+    async function handleFiles() {
+      const input = document.getElementById('pdfInput');
+      const formData = new FormData();
+      uploadedFiles = Array.from(input.files);
+      uploadedFiles.forEach(file => formData.append('files', file));
+
+      try {
+        // Use a relative path so the request goes to the same origin/port serving index.html
+        const response = await fetch('/upload/', {
+          method: 'POST',
+          body: formData,
+        });
+        const result = await response.json();
+        console.log('Uploaded files:', result.uploaded_files);
+        alert(`Uploaded files: ${result.uploaded_files.join(', ')}`);
+      } catch (error) {
+        console.error('Error uploading files:', error);
+        alert('Failed to upload files. Please try again.');
+      }
+
+      renderList();
+    }
+
+    function renderList() {
+      const list = document.getElementById('pdfList');
+      list.innerHTML = "";
+
+      uploadedFiles.forEach((file, index) => {
+        const li = document.createElement('li');
+        li.style.marginBottom = '8px';
+        li.innerHTML = `📄 ${file.name} 
+          <button style="margin-left:10px; background:#dc3545; color:white; border:none; padding:4px 8px; cursor:pointer;" onclick="removeFile(${index})">Remove</button>`;
+        list.appendChild(li);
+      });
+    }
+
+    function removeFile(index) {
+      uploadedFiles.splice(index, 1);
+
+      // Reset file input
+      const input = document.getElementById('pdfInput');
+      const dataTransfer = new DataTransfer();
+
+      uploadedFiles.forEach(file => dataTransfer.items.add(file));
+      input.files = dataTransfer.files;
+
+      renderList();
+    }
+
+    function findLocation() {
+      const q = document.getElementById('question').value.trim();
+      if (q === "") {
+        alert("Please enter a question");
+        return;
+      }
+      document.getElementById('resultBox').style.display = 'block';
+    }
+  </script></body>
+</html>

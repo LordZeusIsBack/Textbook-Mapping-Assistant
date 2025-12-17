@@ -8,4 +8,5 @@ dependencies = [
     "fastapi>=0.124.4",
     "ipykernel>=7.1.0",
     "uvicorn>=0.38.0",
+    "python-multipart>=0.0.6"  # Add this for file uploads
 ]
