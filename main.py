@@ -95,7 +95,7 @@ class StructurePipeline:
         return updated, self.state.copy()
 
 
-def structured_chunker(pages: list[Page], detectors: list[StructureDetector], max_words: int = 350, overlap: int = 50) -> list[Chunk]:
+def structured_chunker(pages: list[Page], detectors: list[StructureDetector], source_file: str, max_words: int = 350, overlap: int = 50) -> list[Chunk]:
     pipeline = StructurePipeline(detectors)
     chunks: list[Chunk] = []
 
@@ -111,6 +111,7 @@ def structured_chunker(pages: list[Page], detectors: list[StructureDetector], ma
                 'text':' '.join(buffer).strip(),
                 'metadata': {
                     'page': page_number,
+                    'source': source_file,
                     **current_metadata
                 }
             }
