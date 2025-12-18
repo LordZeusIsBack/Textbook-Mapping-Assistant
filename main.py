@@ -43,7 +43,7 @@ class QueryRequest(BaseModel):
 
 
 def load_pdf_pages(pdf_path: str) -> list[Page]:
-    doc = open(pdf_path)
+    doc = fitz.open(pdf_path)
     return [{'page_number': i + 1, 'text': page.get_text('text').strip()} for i, page in enumerate(doc)]
 
 
