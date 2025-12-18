@@ -153,6 +153,7 @@ def structured_chunker(pages: list[Page], detectors: list[StructureDetector], so
 
 
 def aggregate_pages(results: list[Chunk]):
+    if not results: return None, None
     pages = sorted({r['metadata']['page'] for r in results})
     return pages[0], pages[-1]
 
