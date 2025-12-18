@@ -183,7 +183,10 @@ def polish_sentence(raw_text: str) -> str:
         ],
         input=prompt,
         text=True,
-        capture_output=True
+        encoding='utf-8',
+        errors='ignore',
+        capture_output=True,
+        timeout=30
     )
 
     return result.stdout.strip()
