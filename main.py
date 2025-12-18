@@ -5,8 +5,12 @@ from abc import ABC, abstractmethod
 from concurrent.futures.thread import ThreadPoolExecutor
 from typing import TypedDict, Optional
 
-from fastapi import FastAPI
-from fitz import open
+import faiss
+from fastapi.responses import FileResponse
+from pydantic import BaseModel
+from sentence_transformers import SentenceTransformer
+from fastapi import FastAPI, UploadFile, File
+import fitz
 
 
 MODEL_PATH = r"C:\Users\ASUS\.hf_models\all-MiniLM-L6-v2"
