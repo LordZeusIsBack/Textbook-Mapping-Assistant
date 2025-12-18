@@ -28,6 +28,7 @@ class ChunkMetadata(TypedDict):
     unit: Optional[str]
     section: Optional[str]
     section_title: Optional[str]
+    source: Optional[str]
 
 
 class Chunk(TypedDict):
