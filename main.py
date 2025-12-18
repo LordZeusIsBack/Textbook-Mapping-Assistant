@@ -191,5 +191,16 @@ def polish_sentence(raw_text: str) -> str:
 
     return result.stdout.strip()
 
+
+def extract_sources(results: list[Chunk]) -> list[str]:
+    return sorted(
+        {
+            r['metadata'].get('source')
+            for r in results
+            if r['metadata'].get('source')
+        }
+    )
+
 app = FastAPI(title='Text Book Assistant')
+
 executor = ThreadPoolExecutor(max_workers=2)
