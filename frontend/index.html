@@ -3,79 +3,139 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>My PDF Textbook Assistant</title>
+  <title>Personal PDF Assistant</title>
+
   <style>
     body {
-      font-family: Arial, sans-serif;
-      background: #eef2f7;
+      font-family: "Segoe UI", Roboto, Arial, sans-serif;
+      background: linear-gradient(135deg, #eef2f7, #f7f9fc);
       margin: 0;
       padding: 0;
     }
+
     .container {
       max-width: 900px;
-      margin: 40px auto;
+      margin: 50px auto;
       background: #ffffff;
-      padding: 30px;
-      border-radius: 10px;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+      padding: 35px;
+      border-radius: 14px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.08);
     }
 
     h1 {
       text-align: center;
-      color: #222;
+      margin-bottom: 6px;
     }
 
-    p.subtitle {
+    .subtitle {
       text-align: center;
       color: #555;
       margin-bottom: 30px;
     }
 
     .upload-box {
-      border: 2px dashed #007bff;
-      padding: 20px;
+      border: 2px dashed #4a90e2;
+      padding: 25px;
       text-align: center;
-      border-radius: 8px;
-      margin-bottom: 25px;
+      border-radius: 10px;
+      background: #f9fbff;
     }
 
     input[type="file"] {
-      margin-top: 10px;
+      margin-top: 12px;
+    }
+
+    ul {
+      list-style: none;
+      padding-left: 0;
+      margin-top: 15px;
+    }
+
+    li {
+      margin-bottom: 6px;
+      color: #333;
     }
 
     .search-box {
       display: flex;
       gap: 10px;
-      margin-top: 20px;
+      margin-top: 30px;
     }
 
     input[type="text"] {
       flex: 1;
-      padding: 12px;
+      padding: 14px;
       font-size: 16px;
-      border-radius: 6px;
+      border-radius: 8px;
       border: 1px solid #ccc;
     }
 
     button {
-      padding: 12px 20px;
+      padding: 14px 22px;
       font-size: 16px;
       border: none;
-      border-radius: 6px;
+      border-radius: 8px;
       cursor: pointer;
-      background-color: #007bff;
+      background-color: #4a90e2;
       color: white;
+      transition: background 0.2s ease;
     }
 
     button:hover {
-      background-color: #0056b3;
+      background-color: #357bd8;
+    }
+
+    .checkbox-container {
+      margin-top: 12px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .checkbox-container label {
+      font-size: 14px;
+      color: #555;
+    }
+
+    /* Progress indicator */
+    #progressContainer {
+      display: none; /* Hidden by default */
+      margin-top: 20px;
+    }
+
+    #progressBarWrapper {
+      background: #e0e0e0;
+      border-radius: 6px;
+      overflow: hidden;
+    }
+
+    #progressBar {
+      height: 10px;
+      width: 30%;
+      background-color: #007bff; /* Updated to requested blue */
+      border-radius: 6px;
+      animation: progressMove 1.2s infinite linear;
+    }
+
+    @keyframes progressMove {
+      0% { margin-left: 0%; }
+      50% { margin-left: 70%; }
+      100% { margin-left: 0%; }
+    }
+
+    #progressText {
+      margin-top: 10px;
+      font-weight: bold;
+      color: #007bff;
+      text-align: center;
     }
 
     .result {
-      margin-top: 30px;
-      padding: 20px;
+      margin-top: 35px;
+      padding: 25px;
       background: #f9fafb;
-      border-left: 5px solid #007bff;
+      border-left: 6px solid #4a90e2;
+      border-radius: 8px;
       display: none;
     }
 
@@ -89,28 +149,9 @@
       color: #888;
       font-size: 14px;
     }
-
-    .loading {
-      display: none;
-      text-align: center;
-      margin-top: 20px;
-      color: #007bff;
-      font-weight: bold;
-    }
-
-    .checkbox-container {
-      margin-top: 10px;
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-
-    .checkbox-container label {
-      font-size: 14px;
-      color: #555;
-    }
   </style>
 </head>
+
 <body>
   <div class="container">
     <h1>📄 Personal PDF Assistant</h1>
@@ -119,8 +160,15 @@
     <div class="upload-box">
       <strong>Upload your PDF textbook(s)</strong><br />
       <input type="file" id="pdfInput" accept="application/pdf" multiple onchange="handleFiles()" />
-      <p style="color:#666; font-size:14px;">(You can upload multiple PDFs)</p>
-      <ul id="pdfList" style="list-style:none; padding-left:0; margin-top:15px;"></ul>
+      <p style="color:#666; font-size:14px;">(Multiple PDFs supported)</p>
+      <ul id="pdfList"></ul>
+    </div>
+
+    <div id="progressContainer">
+      <div id="progressBarWrapper">
+        <div id="progressBar"></div>
+      </div>
+      <div id="progressText">Parsing PDF... please wait</div>
     </div>
 
     <div class="search-box">
@@ -131,10 +179,6 @@
     <div class="checkbox-container">
       <input type="checkbox" id="polishCheckbox" />
       <label for="polishCheckbox">Polish answer using AI (slower)</label>
-    </div>
-
-    <div class="loading" id="loadingIndicator">
-      ⏳ Processing your question...
     </div>
 
     <div class="result" id="resultBox">
@@ -154,90 +198,66 @@
 
     async function handleFiles() {
       const input = document.getElementById('pdfInput');
-      const formData = new FormData();
-      uploadedFiles = Array.from(input.files);
-      uploadedFiles.forEach(file => formData.append('files', file));
+      const files = Array.from(input.files);
+      if (files.length === 0) return;
 
-      if (uploadedFiles.length === 0) {
-        return;
-      }
+      const formData = new FormData();
+      files.forEach(file => formData.append('files', file));
+      uploadedFiles = files;
+
+      renderList();
+
+      // SHOW PROGRESS: Immediately when upload starts
+      document.getElementById('progressContainer').style.display = 'block';
 
       try {
         const response = await fetch('/upload/', {
           method: 'POST',
-          body: formData,
+          body: formData
         });
 
-        if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
-        }
-
         const result = await response.json();
-        console.log('Upload result:', result);
 
         if (result.error) {
-          alert(`Error: ${result.error}`);
-        } else if (result.files_indexed && result.chunks_created !== undefined) {
-          alert(
-            `Successfully uploaded and indexed ${result.chunks_created} chunks from: ${result.files_indexed.join(', ')}`
-          );
+          alert(result.error);
         } else {
-          alert("Upload completed, but response format was unexpected.");
+          alert(`Indexed ${result.chunks_created} chunks from ${result.files_indexed.join(', ')}`);
         }
-      } catch (error) {
-        console.error('Error uploading files:', error);
+      } catch (err) {
+        console.error('Error uploading files:', err);
         alert('Failed to upload files. Please try again.');
       }
 
-      renderList();
+      // HIDE PROGRESS: Always hide after try/catch (success or error)
+      document.getElementById('progressContainer').style.display = 'none';
     }
 
     function renderList() {
       const list = document.getElementById('pdfList');
       list.innerHTML = "";
-
-      uploadedFiles.forEach((file, index) => {
+      uploadedFiles.forEach(file => {
         const li = document.createElement('li');
-        li.style.marginBottom = '8px';
-        li.innerHTML = `📄 ${file.name}
-          <button style="margin-left:10px; background:#dc3545; color:white; border:none; padding:4px 8px; cursor:pointer; border-radius:4px;" onclick="removeFile(${index})">Remove</button>`;
+        // Simple list, no remove button
+        li.textContent = `📄 ${file.name}`;
         list.appendChild(li);
       });
-    }
-
-    function removeFile(index) {
-      uploadedFiles.splice(index, 1);
-
-      const input = document.getElementById('pdfInput');
-      const dataTransfer = new DataTransfer();
-
-      uploadedFiles.forEach(file => dataTransfer.items.add(file));
-      input.files = dataTransfer.files;
-
-      renderList();
     }
 
     async function findLocation() {
       const q = document.getElementById('question').value.trim();
       const polish = document.getElementById('polishCheckbox').checked;
 
-      if (q === "") {
-        alert("Please enter a question");
+      if (!q) {
+        alert("Please enter a question.");
         return;
       }
 
-      const resultBox = document.getElementById('resultBox');
-      const loadingIndicator = document.getElementById('loadingIndicator');
-
-      resultBox.style.display = 'none';
-      loadingIndicator.style.display = 'block';
+      document.getElementById('resultBox').style.display = 'none';
 
       try {
         const response = await fetch('/query/', {
           method: 'POST',
-          headers: {
-            'Content-Type': 'application/json'
-          },
+          headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             question: q,
             polish: polish,
@@ -245,29 +265,22 @@
           })
         });
 
-        if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
-        }
-
         const result = await response.json();
 
         if (result.error) {
-          alert(`Error: ${result.error}`);
-          loadingIndicator.style.display = 'none';
+          alert(result.error);
           return;
         }
 
         document.getElementById('answerText').textContent = result.answer;
         document.getElementById('pageRange').textContent = result.page_range;
-        document.getElementById('sourceFiles').textContent = result.sources ? result.sources.join(', ') : 'Unknown';
+        document.getElementById('sourceFiles').textContent =
+          result.sources ? result.sources.join(', ') : 'Unknown';
 
-        loadingIndicator.style.display = 'none';
-        resultBox.style.display = 'block';
-
-      } catch (error) {
-        console.error('Error querying:', error);
-        alert('Failed to query. Please make sure you have uploaded a PDF first.');
-        loadingIndicator.style.display = 'none';
+        document.getElementById('resultBox').style.display = 'block';
+      } catch (err) {
+        console.error(err);
+        alert('Query failed. Make sure PDFs are uploaded.');
       }
     }
 
