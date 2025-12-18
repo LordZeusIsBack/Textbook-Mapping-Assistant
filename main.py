@@ -213,3 +213,49 @@ index = None
 @app.get('/')
 def serve_frontend():
     return FileResponse('frontend/index.html')
+
+@app.post('/upload/')
+def upload_pdf(files: list[UploadFile] = File(...)):
+    global chunks, index
+
+    all_chunks: list[Page] = []
+
+    for file in files:
+        file_path = UPLOAD_DIR / file.filename
+        with open(file_path, 'wb') as fp: fp.write(file.file.read())
+        pages = load_pdf_pages(str(file_path))
+        pdf_chunks = structured_chunker(
+            pages,
+            [
+                UnitDetector(),
+                NumberedSectionDetector()
+            ],
+            file.filename
+        )
+        all_chunks.extend(pdf_chunks)
+
+    if not all_chunks: return {'error': 'No valid PDF pages found.'}
+
+    chunks = all_chunks
+
+    texts = [c['text'] for c in chunks]
+
+    embeddings = embedder.encode(
+        texts,
+        normalize_embeddings=True
+    ).astype('float32')
+
+    if embeddings.size == 0: return {'error': 'No text content found in PDF.'}
+
+    index = faiss.IndexFlatIP(embeddings.shape[1])
+    index.add(embeddings)
+
+    for file in files:
+        file_path = UPLOAD_DIR / file.filename
+        if file_path: file_path.unlink()
+
+    return {
+        'status': 'success',
+        'files_indexed': [f.filename for f in files],
+        'chunks_created': len(chunks)
+    }
