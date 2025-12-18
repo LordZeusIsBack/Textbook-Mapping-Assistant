@@ -178,19 +178,21 @@ def build_response(results: list[Chunk]) -> str:
 def polish_sentence(raw_text: str) -> str:
     prompt = f'Rephrase the following sentence in a clear academic tone:\n{raw_text}'
 
-    result = subprocess.run(
-        [
-            'ollama', 'run', 'llama3.2:3b'
-        ],
-        input=prompt,
-        text=True,
-        encoding='utf-8',
-        errors='ignore',
-        capture_output=True,
-        timeout=30
-    )
-
-    return result.stdout.strip()
+    try:
+        result = subprocess.run(
+            [
+                'ollama', 'run', 'llama3.2:3b'
+            ],
+            input=prompt,
+            text=True,
+            encoding='utf-8',
+            errors='ignore',
+            capture_output=True,
+            timeout=30
+        )
+        if result.returncode != 0: return raw_text
+        return result.stdout.strip()
+    except (FileNotFoundError, subprocess.TimeoutExpired): return raw_text
 
 
 def extract_sources(results: list[Chunk]) -> list[str]:
