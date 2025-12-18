@@ -226,16 +226,18 @@ def upload_pdf(files: list[UploadFile] = File(...)):
     for file in files:
         file_path = UPLOAD_DIR / file.filename
         with open(file_path, 'wb') as fp: fp.write(file.file.read())
-        pages = load_pdf_pages(str(file_path))
-        pdf_chunks = structured_chunker(
-            pages,
-            [
-                UnitDetector(),
-                NumberedSectionDetector()
-            ],
-            file.filename
-        )
-        all_chunks.extend(pdf_chunks)
+        try:
+            pages = load_pdf_pages(str(file_path))
+            pdf_chunks = structured_chunker(
+                pages,
+                [
+                    UnitDetector(),
+                    NumberedSectionDetector()
+                ],
+                file.filename
+            )
+            all_chunks.extend(pdf_chunks)
+        except Exception as e: return {'error': f'Failed to process {file.filename}: {str(e)}'}
 
     if not all_chunks: return {'error': 'No valid PDF pages found.'}
 
