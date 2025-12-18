@@ -268,7 +268,7 @@ def upload_pdf(files: list[UploadFile] = File(...)):
 
 @app.post('/query/')
 def query_textbook(payload: QueryRequest):
-    if index is None or not chunks: return {'error': 'No PDF indexed. Please upload a PF first.'}
+    if index is None or not chunks: return {'error': 'No PDF indexed. Please upload a PDF first.'}
 
     q_emb = embedder.encode(
         [payload.question],
@@ -277,7 +277,7 @@ def query_textbook(payload: QueryRequest):
 
     scores, indices = index.search(q_emb, payload.top_k)
 
-    results = [chunks[i] for i in indices[0]]
+    results = [chunks[i] for i in indices[0] if 0 <= i < len(chunks)]
 
     raw_answer = build_response(results)
 
