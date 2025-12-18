@@ -259,3 +259,35 @@ def upload_pdf(files: list[UploadFile] = File(...)):
         'files_indexed': [f.filename for f in files],
         'chunks_created': len(chunks)
     }
+
+
+@app.post('/query/')
+def query_textbook(payload: QueryRequest):
+    if index is None or not chunks: return {'error': 'No PDF indexed. Please upload a PF first.'}
+
+    q_emb = embedder.encode(
+        [payload.question],
+        normalize_embeddings=True
+    ).astype('float32')
+
+    scores, indices = index.search(q_emb, payload.top_k)
+
+    results = [chunks[i] for i in indices[0]]
+
+    raw_answer = build_response(results)
+
+    if payload.polish:
+        future = executor.submit(polish_sentence, raw_answer)
+        final_answer = future.result()
+    else: final_answer = raw_answer
+
+    start, end = aggregate_pages(results)
+
+    sources = extract_sources(results)
+
+    return {
+        'question': payload.question,
+        'answer': final_answer,
+        'page_range': f'{start}-{end}',
+        'sources': sources
+    }
