@@ -209,3 +209,7 @@ embedder = SentenceTransformer(MODEL_PATH, device='cpu')
 chunks: list[Chunk] = []
 
 index = None
+
+@app.get('/')
+def serve_frontend():
+    return FileResponse('frontend/index.html')
