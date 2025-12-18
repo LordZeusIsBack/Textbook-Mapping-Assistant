@@ -204,3 +204,8 @@ def extract_sources(results: list[Chunk]) -> list[str]:
 app = FastAPI(title='Text Book Assistant')
 
 executor = ThreadPoolExecutor(max_workers=2)
+
+embedder = SentenceTransformer(MODEL_PATH, device='cpu')
+chunks: list[Chunk] = []
+
+index = None
