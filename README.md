@@ -28,25 +28,8 @@ The system operates entirely inside a **local, offline environment** with full t
 
 ### Architecture View
 
-```mermaid
-graph TB
-    A[PDF Upload<br/>User provides textbook]
-    --> B[PDF Parsing<br/>PyMuPDF extracts text + page numbers]
-    --> C[Structure Detection<br/>UNIT / Chapter / Section regex]
-    --> D[Chunking Engine<br/>Sentence-level chunks + metadata]
-    --> E[Embedding Model<br/>all-MiniLM-L6-v2]
-    --> F[(FAISS Vector Index<br/>Vectors + page + section)]
+![Architecture Diagram](static/Architecture.png)
 
-    G[User Query]
-    --> H[Query Embedding<br/>Same embedding model]
-    --> I{FAISS Similarity Search}
-
-    F --> I
-    I --> J[Top-K Relevant Chunks<br/>With metadata]
-    J --> K[Source Location Resolver<br/>Merge page ranges]
-    K --> L[LLM Polisher<br/>Ollama Llama 3.2 3B]
-    L --> M[Final Output<br/>Section + Page Range]
-```
 
 ### Component Responsibilities
 
@@ -109,22 +92,7 @@ Example output:
 
 ## Explainable AI (X-AI) Workflow
 
-```mermaid
-sequenceDiagram
-    participant User
-    participant App
-    participant Detector
-    participant FAISS
-
-    User->>App: Upload PDF
-    App->>Detector: Scan UNIT / Section patterns
-    Detector-->>App: Metadata labels
-    App->>FAISS: Store text + page + section
-    User->>App: Ask question
-    App->>FAISS: Vector search
-    FAISS-->>App: Top-K matches + metadata
-    App-->>User: Section + page range
-```
+![Workflow Diagram](static/Workflow.png)
 
 ## Outcome
 The Textbook Mapping Assistant delivers a fundamentally different outcome compared to conventional AI learning tools. Instead of producing opaque or potentially misleading answers, it provides traceability, reliability, and academic confidence.
